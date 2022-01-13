@@ -1,3 +1,4 @@
+import { CANVAS_CELL_SIZE } from "./constants";
 import { Board, BoardItem, Point } from "./types";
 
 let ctx: CanvasRenderingContext2D | null = null;
@@ -29,28 +30,37 @@ export function renderBoard(board: Board) {
 						ctx.fillStyle = 'rgb(0, 200, 0)';
 						break;
 					case BoardItem.Window:
-						ctx.fillStyle = 'rgba(0, 200, 200, 0.5)';
+						ctx.fillStyle = 'rgb(0, 200, 200)';
 						break;
 				}
-				const x = colIdx * 50;
-				const y = rowIdx * 50;
-				ctx.fillRect(x, y, 50, 50);
+				const x = colIdx * CANVAS_CELL_SIZE;
+				const y = rowIdx * CANVAS_CELL_SIZE;
+				ctx.fillRect(x, y, CANVAS_CELL_SIZE, CANVAS_CELL_SIZE);
 			}
 		}
 	}
-	
-	// TODO: log
-	console.log("render");
-
 }
 
-export function update([previousValue, currentValue]: [number, number]) {
-	if (ctx) {
-		ctx.fillStyle = 'rgba(0, 200, 200, 0.5)';
-		ctx.fillRect(0, 0, 50, 50);
-
-		// TODO: log
-		console.log("update", previousValue, currentValue);
+export function getCursorPosition(event: MouseEvent): Point {
+	if (event.target instanceof HTMLElement) {
+		const rect = event.target.getBoundingClientRect();
+		const x = event.clientX - rect.left;
+		const y = event.clientY - rect.top;
+		return [x, y];
 	}
+	throw new Error("event.target should be HTMLElement")
+}
 
+export function getBoardPosition([x, y]: Point): Point {
+    return [
+        Math.floor(y / CANVAS_CELL_SIZE),
+        Math.floor(x / CANVAS_CELL_SIZE),
+    ]
+}
+
+export function updateScore() {
+	const score = document.getElementById("score");
+	if (score) {
+		score.innerHTML = (+score.innerHTML + 1).toString();
+	}
 }
