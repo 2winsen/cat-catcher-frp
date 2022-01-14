@@ -1,4 +1,7 @@
-export type Board = BoardItem[][];
+export type GameBoard = {
+    grid: number[][],
+    windows: Point[],
+};
 
 export type Point = [number, number];
 

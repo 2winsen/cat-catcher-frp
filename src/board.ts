@@ -1,4 +1,4 @@
-import { Board, BoardItem, Point } from "./types";
+import { GameBoard, BoardItem, Point } from "./types";
 import { BOARD_HEIGHT, BOARD_WIDTH, WINDOWS_COUNT } from "./constants";
 
 export function randomInt(min: number, max: number) {
@@ -7,50 +7,33 @@ export function randomInt(min: number, max: number) {
     );
 }
 
-export function emptyBoard() {
-    const emptyBoard: Board = Array.from(
-        { length: BOARD_HEIGHT },
-        () => Array.from({ length: BOARD_WIDTH }, () => BoardItem.EmptyCell)
+export function emptyBoard(): GameBoard {
+    const grid = Array.from(
+        { length: BOARD_WIDTH },
+        () => Array.from({ length: BOARD_HEIGHT }, () => BoardItem.EmptyCell)
     );
-    return emptyBoard;
+    return {
+        grid,
+        windows: [],
+    };
 }
 
-export function addWindows(board: Board) {
+export function addWindows(board: GameBoard) {
+    const { grid, windows } = board;
     for (let index = 0; index < WINDOWS_COUNT; index++) {
-        board[randomInt(0, BOARD_HEIGHT - 1)][randomInt(0, BOARD_WIDTH - 1)] = BoardItem.Window;
+        const x = randomInt(0, BOARD_WIDTH - 1);
+        const y = randomInt(0, BOARD_HEIGHT - 1);
+        grid[x][y] = BoardItem.Window;
+        windows.push([x, y]);
     }
     return board;
 }
 
-export function getWindows(board: Board): Point[] {
-    let windows = [] as Point[];
-    for (let colIdx = 0; colIdx < board.length; colIdx++) {
-        const row = board[colIdx];
-        for (let rowIdx = 0; rowIdx < row.length; rowIdx++) {
-            const cell = row[rowIdx];
-            if (cell !== BoardItem.EmptyCell) {
-                windows.push([colIdx, rowIdx]);
-            }
-        }
-
-    }
-    return windows;
+export function getRandomWindow({ windows }: GameBoard) {
+    return windows[randomInt(0, windows.length - 1)];
 }
 
-export function clean(board: Board): Board {
-    for (let colIdx = 0; colIdx < board.length; colIdx++) {
-        const row = board[colIdx];
-        for (let rowIdx = 0; rowIdx < row.length; rowIdx++) {
-            const cell = row[rowIdx];
-            if (cell === BoardItem.Cat) {
-                board[colIdx][rowIdx] = BoardItem.Window;
-            }
-        }
-
-    }
-    return board;
-}
-
-export function getRandomWindow() {
-    return randomInt(0, WINDOWS_COUNT - 1);
+export function showCat([prevX, prevY]: Point, [x, y]: Point, board: GameBoard) {
+    board.grid[prevX][prevY] = BoardItem.Window;
+    board.grid[x][y] = BoardItem.Cat;
 }

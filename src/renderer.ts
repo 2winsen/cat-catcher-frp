@@ -1,5 +1,5 @@
 import { CANVAS_CELL_SIZE } from "./constants";
-import { Board, BoardItem, Point } from "./types";
+import { GameBoard, BoardItem, Point } from "./types";
 
 let ctx: CanvasRenderingContext2D | null = null;
 
@@ -13,15 +13,26 @@ function initContext() {
 	return null;
 }
 
-export function renderBoard(board: Board) {
+export function fillRect([x, y]: Point) {
+	if (ctx) {
+		ctx.fillRect(
+			x * CANVAS_CELL_SIZE, 
+			y * CANVAS_CELL_SIZE, 
+			CANVAS_CELL_SIZE, 
+			CANVAS_CELL_SIZE
+		);
+	}
+}
+
+export function renderBoard({ grid }: GameBoard) {
 	if (!ctx) {
 		ctx = initContext();
 	}
 	if (ctx) {
-		for (let rowIdx = 0; rowIdx < board.length; rowIdx++) {
-			const row = board[rowIdx];
-			for (let colIdx = 0; colIdx < row.length; colIdx++) {
-				const cell = row[colIdx];
+		for (let x = 0; x < grid.length; x++) {
+			const col = grid[x];
+			for (let y = 0; y < col.length; y++) {
+				const cell = col[y];
 				switch (cell) {
 					case BoardItem.EmptyCell:
 						ctx.fillStyle = 'rgb(200, 0, 0)';
@@ -33,11 +44,19 @@ export function renderBoard(board: Board) {
 						ctx.fillStyle = 'rgb(0, 200, 200)';
 						break;
 				}
-				const x = colIdx * CANVAS_CELL_SIZE;
-				const y = rowIdx * CANVAS_CELL_SIZE;
-				ctx.fillRect(x, y, CANVAS_CELL_SIZE, CANVAS_CELL_SIZE);
+				fillRect([x, y]);
 			}
 		}
+	}
+}
+
+export function updateBoard(prevCatPosition: Point, catPosition: Point) {
+	if (ctx) {
+		ctx.fillStyle = 'rgb(0, 200, 200)';
+		fillRect(prevCatPosition);
+
+		ctx.fillStyle = 'rgb(0, 200, 0)';
+		fillRect(catPosition);
 	}
 }
 
@@ -52,10 +71,10 @@ export function getCursorPosition(event: MouseEvent): Point {
 }
 
 export function getBoardPosition([x, y]: Point): Point {
-    return [
-        Math.floor(y / CANVAS_CELL_SIZE),
-        Math.floor(x / CANVAS_CELL_SIZE),
-    ]
+	return [
+		Math.floor(x / CANVAS_CELL_SIZE),
+		Math.floor(y / CANVAS_CELL_SIZE),
+	]
 }
 
 export function updateScore() {

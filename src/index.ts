@@ -1,37 +1,36 @@
-import { filter, fromEvent, interval, map, of, scan, startWith, switchMap, tap } from "rxjs";
-import { addWindows, clean, emptyBoard, getRandomWindow, getWindows } from "./board";
+import { filter, fromEvent, interval, map, of, pairwise, startWith, switchMap, tap } from "rxjs";
+import { showCat, addWindows, emptyBoard, getRandomWindow } from "./board";
 import { GAME_INTERVAL } from "./constants";
 import "./index.css";
-import { getBoardPosition, getCursorPosition, renderBoard, updateScore } from "./renderer";
-import { Board, BoardItem } from "./types";
-
-const canvas = document.getElementById("canvas");
+import { getBoardPosition, getCursorPosition, renderBoard, updateBoard, updateScore } from "./renderer";
+import { BoardItem, GameBoard } from "./types";
 
 const board$ = of(emptyBoard())
     .pipe(
         map(addWindows),
+        tap(renderBoard),
     );
 
-const player$ = (board: Board) => fromEvent<MouseEvent>(document, "click")
+const cat$ = (board: GameBoard) => interval(GAME_INTERVAL)
     .pipe(
-        filter(event => event.target === canvas),
+        startWith(0, 0),
+        map(_ => getRandomWindow(board)),
+        pairwise(),
+        tap(([previousPoint, point]) => {
+            showCat(previousPoint, point, board);
+            updateBoard(previousPoint, point);
+        }),
+        map(_ => board),
+    );
+
+const player$ = ({ grid }: GameBoard) => fromEvent<MouseEvent>(document, "click")
+    .pipe(
+        filter(event => event.target === document.getElementById("canvas")),
         map(getCursorPosition),
         map(getBoardPosition),
-        map(([col, row]) => board[col][row]),
+        map(([x, y]) => grid[x][y]),
         filter(boardItem => boardItem === BoardItem.Cat),
         tap(updateScore),
-    );
-
-const cat$ = (board: Board) => interval(GAME_INTERVAL)
-    .pipe(
-        startWith(0),
-        map(_ => getRandomWindow()),
-        map(windowIdx => getWindows(board)[windowIdx]),
-        scan((acc, [col, row]) => {
-            acc[col][row] = BoardItem.Cat;
-            return acc;
-        }, board),
-        tap(renderBoard),
     );
 
 board$.pipe(

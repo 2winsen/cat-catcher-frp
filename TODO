@@ -1,0 +1,4 @@
+- rerender only cell
+- refactor board clean
+- images
+- cursor (canvas solution vs dom)
