@@ -4,7 +4,10 @@ import wallImg from "./assets/wall.png";
 import windowImg from "./assets/window.png";
 import catImg from "./assets/cat.png";
 
+type ImageKey = "wall" | "window" | "cat";
+
 let ctx: CanvasRenderingContext2D | null = null;
+let preloadedImages: Map<ImageKey, HTMLImageElement> = new Map();
 
 function initContext() {
 	const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -27,25 +30,31 @@ function clearRect([x, y]: Point) {
 	}
 }
 
-function drawImage(imageSrc: string, [x, y]: Point, xOffset = 0, yOffset = 0) {
+function loadImage(key: ImageKey, imageSrc: string) {
 	const img = new Image();
 	img.src = imageSrc;
-	img.onload = () => {
-		if (ctx) {
-			ctx.drawImage(
-				img,
-				(x * CANVAS_CELL_SIZE) - (xOffset / 2),
-				y * CANVAS_CELL_SIZE - (yOffset / 2),
-				CANVAS_CELL_SIZE + xOffset,
-				CANVAS_CELL_SIZE + yOffset
-			);
-		}
+	preloadedImages.set(key, img);
+}
+
+function drawImage(key: ImageKey, [x, y]: Point) {
+	const image = preloadedImages.get(key);
+	if (ctx && image) {
+		// Optimization: images are prescaled as optimization no need to scale programmatically
+		ctx.drawImage(
+			image,
+			x * CANVAS_CELL_SIZE,
+			y * CANVAS_CELL_SIZE,
+		);
 	}
 }
 
 export function renderBoard({ grid }: GameBoard) {
 	if (!ctx) {
 		ctx = initContext();
+		// Optimization: preloading
+		loadImage("wall", wallImg);
+		loadImage("window", windowImg);
+		loadImage("cat", catImg);
 	}
 	if (ctx) {
 		for (let x = 0; x < grid.length; x++) {
@@ -54,10 +63,10 @@ export function renderBoard({ grid }: GameBoard) {
 				const cell = col[y];
 				switch (cell) {
 					case BoardItem.EmptyCell:
-						drawImage(wallImg, [x, y]);
+						drawImage("wall", [x, y]);
 						break;
 					case BoardItem.Window:
-						drawImage(windowImg, [x, y], -6, -6);
+						drawImage("window", [x, y]);
 						break;
 				}
 			}
@@ -72,8 +81,8 @@ export function updateBoard(prevCatPosition: Point, catPosition: Point) {
 		}
 
 		clearRect(prevCatPosition);
-		drawImage(windowImg, prevCatPosition, -6, -6);
-		drawImage(catImg, catPosition);
+		drawImage("window", prevCatPosition);
+		drawImage("cat", catPosition);
 	}
 }
 
