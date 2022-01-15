@@ -1,9 +1,11 @@
-import { filter, fromEvent, interval, map, of, pairwise, startWith, switchMap, tap } from "rxjs";
-import { showCat, addWindows, emptyBoard, getRandomWindow } from "./board";
+import { combineLatest, concat, filter, from, fromEvent, interval, map, of, pairwise, startWith, switchMap, tap } from "rxjs";
+import { addWindows, emptyBoard, getRandomWindow, showCat } from "./board";
 import { GAME_INTERVAL } from "./constants";
 import "./index.css";
-import { getBoardPosition, getCursorPosition, renderBoard, updateBoard, updateScore } from "./renderer";
-import { BoardItem, GameBoard } from "./types";
+import { getBoardPosition, getCursorPosition, preloadImages, renderBoard, updateBoard, updateScore } from "./renderer";
+import { GameBoard } from "./types";
+
+const preload$ = from(preloadImages());
 
 const board$ = of(emptyBoard())
     .pipe(
@@ -29,12 +31,13 @@ const player$ = ({ grid }: GameBoard) => fromEvent<MouseEvent>(document, "click"
         map(getCursorPosition),
         map(getBoardPosition),
         map(([x, y]) => grid[x][y]),
-        filter(boardItem => boardItem === BoardItem.Cat),
         tap(updateScore),
     );
 
-board$.pipe(
-    switchMap(cat$),
-    switchMap(player$),
-)
+preload$
+    .pipe(
+        switchMap(_ => board$),
+        switchMap(cat$),
+        switchMap(player$),
+    )
     .subscribe();

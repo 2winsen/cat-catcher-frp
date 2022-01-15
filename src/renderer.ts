@@ -28,10 +28,15 @@ function clearRect([x, y]: Point) {
 	}
 }
 
-function loadImage(key: BoardItem, imageSrc: string) {
-	const img = new Image();
-	img.src = imageSrc;
-	preloadedImages.set(key, img);
+function loadImage(key: BoardItem, imageSrc: string): Promise<BoardItem> {
+	return new Promise(res => {
+		const img = new Image();
+		img.src = imageSrc;
+		img.onload = function () {
+			preloadedImages.set(key, img);
+			res(key);
+		}
+	})
 }
 
 function drawImage(key: BoardItem, [x, y]: Point) {
@@ -46,13 +51,18 @@ function drawImage(key: BoardItem, [x, y]: Point) {
 	}
 }
 
+export function preloadImages() {
+	// Optimization: preloading
+	return Promise.all([
+		loadImage(BoardItem.Wall, wallImg),
+		loadImage(BoardItem.Window, windowImg),
+		loadImage(BoardItem.Cat, catImg),
+	]);
+}
+
 export function renderBoard({ grid }: GameBoard) {
 	if (!ctx) {
 		ctx = initContext();
-		// Optimization: preloading
-		loadImage(BoardItem.Wall, wallImg);
-		loadImage(BoardItem.Window, windowImg);
-		loadImage(BoardItem.Cat, catImg);
 	}
 	if (ctx) {
 		for (let x = 0; x < grid.length; x++) {
@@ -104,9 +114,15 @@ export function getBoardPosition([x, y]: Point): Point {
 	]
 }
 
-export function updateScore() {
+export function updateScore(boardItem: BoardItem) {
+	const scoreContainer = document.getElementById("scoreContainer");
 	const score = document.getElementById("score");
-	if (score) {
-		score.innerHTML = (+score.innerHTML + 1).toString();
+	if (scoreContainer && score) {
+		if (boardItem === BoardItem.Cat) {
+			scoreContainer.classList.remove("miss");
+			score.innerHTML = (+score.innerHTML + 1).toString();
+		} else {
+			scoreContainer.classList.add("miss");
+		}
 	}
 }
