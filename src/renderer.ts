@@ -4,10 +4,8 @@ import wallImg from "./assets/wall.png";
 import windowImg from "./assets/window.png";
 import catImg from "./assets/cat.png";
 
-type ImageKey = "wall" | "window" | "cat";
-
 let ctx: CanvasRenderingContext2D | null = null;
-let preloadedImages: Map<ImageKey, HTMLImageElement> = new Map();
+let preloadedImages: Map<BoardItem, HTMLImageElement> = new Map();
 
 function initContext() {
 	const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -30,13 +28,13 @@ function clearRect([x, y]: Point) {
 	}
 }
 
-function loadImage(key: ImageKey, imageSrc: string) {
+function loadImage(key: BoardItem, imageSrc: string) {
 	const img = new Image();
 	img.src = imageSrc;
 	preloadedImages.set(key, img);
 }
 
-function drawImage(key: ImageKey, [x, y]: Point) {
+function drawImage(key: BoardItem, [x, y]: Point) {
 	const image = preloadedImages.get(key);
 	if (ctx && image) {
 		// Optimization: images are prescaled as optimization no need to scale programmatically
@@ -52,9 +50,9 @@ export function renderBoard({ grid }: GameBoard) {
 	if (!ctx) {
 		ctx = initContext();
 		// Optimization: preloading
-		loadImage("wall", wallImg);
-		loadImage("window", windowImg);
-		loadImage("cat", catImg);
+		loadImage(BoardItem.Wall, wallImg);
+		loadImage(BoardItem.Window, windowImg);
+		loadImage(BoardItem.Cat, catImg);
 	}
 	if (ctx) {
 		for (let x = 0; x < grid.length; x++) {
@@ -62,11 +60,11 @@ export function renderBoard({ grid }: GameBoard) {
 			for (let y = 0; y < col.length; y++) {
 				const cell = col[y];
 				switch (cell) {
-					case BoardItem.EmptyCell:
-						drawImage("wall", [x, y]);
+					case BoardItem.Wall:
+						drawImage(cell, [x, y]);
 						break;
 					case BoardItem.Window:
-						drawImage("window", [x, y]);
+						drawImage(cell, [x, y]);
 						break;
 				}
 			}
@@ -74,6 +72,9 @@ export function renderBoard({ grid }: GameBoard) {
 	}
 }
 
+/**
+ * Optimization: to redraw only changed parts
+ */
 export function updateBoard(prevCatPosition: Point, catPosition: Point) {
 	if (ctx) {
 		if (prevCatPosition.toString() === catPosition.toString()) {
@@ -81,8 +82,8 @@ export function updateBoard(prevCatPosition: Point, catPosition: Point) {
 		}
 
 		clearRect(prevCatPosition);
-		drawImage("window", prevCatPosition);
-		drawImage("cat", catPosition);
+		drawImage(BoardItem.Window, prevCatPosition);
+		drawImage(BoardItem.Cat, catPosition);
 	}
 }
 

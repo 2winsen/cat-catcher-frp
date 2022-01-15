@@ -6,7 +6,7 @@ export type GameBoard = {
 export type Point = [number, number];
 
 export enum BoardItem {
-    EmptyCell,
+    Wall,
     Window,
     Cat
 }

@@ -10,7 +10,7 @@ export function randomInt(min: number, max: number) {
 export function emptyBoard(): GameBoard {
     const grid = Array.from(
         { length: BOARD_WIDTH },
-        () => Array.from({ length: BOARD_HEIGHT }, () => BoardItem.EmptyCell)
+        () => Array.from({ length: BOARD_HEIGHT }, () => BoardItem.Wall)
     );
     return {
         grid,
